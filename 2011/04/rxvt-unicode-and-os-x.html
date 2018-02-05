@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<head>
+  <!--[if lt IE 9]>
+  <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+  <meta charset='utf-8' />
+  <meta content='width=320,initial-scale=1' name='viewport' />
+  <title>rxvt-unicode and OS X &mdash; dywypi.org</title>
+  <meta content='Jyrki Pulliainen' name='author' />
+  
+
+<link rel="alternate" href="http://feeds.feedburner.com/dywypiorg-blog" type="application/atom+xml" title="dywypi.org" />
+
+  <link href='/css/base.css' rel='stylesheet' />
+  <link href='http://fonts.googleapis.com/css?family=Cabin:400,700' link='link' rel='stylesheet' type='text/css' />
+  
+
+<link rel="stylesheet" href="/css/pygments.css">
+
+</head>
+<body>
+  <header class='cf'>
+    <h1>
+      <a href='/'>dywypi.org</a>
+    </h1>
+  </header>
+  <section class='cf' id='main'>
+    
+  
+<article class="blogentry">
+  
+  <h1>
+    <a href="/2011/04/rxvt-unicode-and-os-x.html">rxvt-unicode and OS X</a>
+  </h1>
+
+  <div class="head info">
+    by <a href="/about/">Jyrki Pulliainen</a> on 2011-04-05
+  </div>
+
+  <div class="cf content">
+    <p>When I started at my current job at <a href="http://taiste.fi">Taiste</a> I
+got 15" Macbook Pro as my primary computer at work. As a long time
+Ubuntu user I was faced with series of problems, mainly due to
+differences in platforms. Package management is a pain I just have to
+live with, <a href="http://emacsformacosx.com">Emacs</a> works almost out of the
+box as it should, but the terminal requires some heavy tweaking.</p>
+<h2>Available alternatives</h2>
+<p>OS X has few alternatives available. The system ships with
+<a href="http://en.wikipedia.org/wiki/Apple_Terminal">Terminal.app</a>, which has
+been redone for Snow Leopard (aka 10.6). It's decent, looks like a
+terminal, but has at least one minor and one major drawback. Minor
+drawback is the lack of proper color support (yes, I <strong>need</strong> colors
+in terminal). Terminal.app supports only 16 colors. 16, Six-teen. 70s
+called and they want their terminal back.</p>
+<p>Major drawback is that you simply can't override cmd key functionality
+in any sane way to make it work as a Meta key in terminal. In
+practice, your forced to use ESC as Meta key, which just does not cut
+it.</p>
+<p>Another option is <a href="https://sites.google.com/site/iterm2home/">iTerm2</a>.
+Feels like the Swiss army knife of OS X terminals. Has load of
+configuration options, even supports, in latest versions, rebinding
+cmd keys as Meta keys! So after all it looks that even this milky
+white cloud has a silver lining.</p>
+<p>But unfortunately, the iTerm2 also has a major drawback: If you rebind
+either of cmd keys as Meta, it wont let cmd+Tab (aka the Alt-Tab
+equivalent of OS X) go through to OS X level (Emacs knows how to do
+this, can't be that hard...). So basically you can't switch between
+applications with keyboard when using iTerm, unless you bind Option
+key to cmd, which makes option+tab switching possible, which on the
+other hand breaks every single option+key combo (like parenthesis)...</p>
+<h2>Back to the One That (Mostly) Works</h2>
+<p>I was a happy user of
+<a href="http://software.schmorp.de/pkg/rxvt-unicode.html">rxvt-unicode</a> on
+Ubuntu, so I started searching if it would cut on OS X too. First
+caveat is that it needs to be run under X11, or
+<a href="http://xquartz.macosforge.org/">XQuartz</a>. I've been told that that's
+the final frontier no true OS X user wants to confront.</p>
+<p>However, everything went smoother than expected. First thing was to
+install rxvt-unicode. I used
+<a href="http://mxcl.github.com/homebrew/">homebrew</a> for that:</p>
+<pre>
+  brew install urxvt
+</pre>
+
+<p>After compiling a while (binary packages, anyone?) rxvt-unicode got
+installed. Butt ugly as usual, but there it was. After configuring
+colors (see
+<a href="http://sdkmvx.wordpress.com/2008/08/13/rxvt-unicode-terminal-colors/">here</a>
+for example) it was time to make it more Mac-compatible.</p>
+<h3>Copy &amp; Paste</h3>
+<p>As every true programmer knows, when deadlines hit the tool that Gets
+Job Done is Copy &amp; Paste. So it was essential to get copy &amp; paste
+functionality in urxvt. I use a slightly modified clipboard script on
+urxvt to do the magic. It's available as a
+<a href="https://gist.github.com/906248">gist</a>.</p>
+<p>To get it working, you need to define it (and the shortcuts) in
+<code>.Xdefaults</code> with few lines:</p>
+<pre>
+  URxvt.perl-ext-common: macosx-clipboard
+  URxvt*keysym.M-c: perl:macosx-clipboard:copy
+  URxvt*keysym.M-v: perl:macosx-clipboard:paste
+</pre>
+
+<p>After this, I got traditional copy &amp; paste with cmd-C and cmd-V in
+urxvt!</p>
+<h3>Opening urls</h3>
+<p>Bart Trojanowski's excellent
+<a href="https://github.com/bartman/urxvt-scripts">mark-yank-urls</a> comes to
+help with URLs. For OS X use, I've
+<a href="https://gist.github.com/906263">modified it a bit</a>. In addition to
+the script, I use a custom applescript to launch URLs in background in
+Chrome:</p>
+<div class="pygments"><pre>  <span class="nb">on</span> <span class="nb">run</span> <span class="nv">argv</span>
+    <span class="k">tell</span> <span class="nb">application</span> <span class="s2">&quot;Google Chrome&quot;</span>
+      <span class="k">set</span> <span class="nv">taburl</span> <span class="k">to</span> <span class="nb">item</span> <span class="mi">1</span> <span class="k">of</span> <span class="nv">argv</span>
+      <span class="k">set</span> <span class="nv">myTab</span> <span class="k">to</span> <span class="nb">make</span> <span class="nb">new</span> <span class="no">tab</span> <span class="nb">at</span> <span class="k">end</span> <span class="k">of</span> <span class="nv">tabs</span> <span class="k">of</span> <span class="na">window</span> <span class="mi">1</span> <span class="nv">with</span> <span class="na">properties</span> <span class="p">{</span><span class="nv">URL</span><span class="p">:</span><span class="nv">taburl</span><span class="p">}</span>
+    <span class="k">end</span> <span class="k">tell</span>
+  <span class="k">end</span> <span class="nb">run</span>
+</pre></div>
+
+<p>Applescript is launched via bash script (yo dawg!), which just calls
+<code>osascript &lt;path-to-applescript&gt; argument</code>. Next step is
+just to add this script and keybinding in <code>.Xdefaults</code>:</p>
+<pre>
+  URxvt.perl-ext: selection,mark-yank-urls
+  URxvt.keysym.M-u: perl:mark-yank-urls:activate_mark_mode
+</pre>
+
+<p>After this, Meta-U goes to URL selection mode, C-p/C-n scroll through
+URLs, y yanks (that's copying, you lesser emacsers) and Return opens
+URLs in background in your Chrome.</p>
+
+    
+    <div class="tail info">
+      <p>If you want to comment this blog post, just send mail
+        to <span class="ma b">my firstname + blog @ thisdomain.tld</span>.
+        If the question is a proper one, it might get answered. Good ones
+        might even end up on the site.</p>
+
+      <p>Tags:
+        
+        <a href="/tags/osx/">osx</a>
+        
+        <a href="/tags/terminal/">terminal</a>
+        
+        <a href="/tags/urxvt/">urxvt</a>
+        </p>
+    </div>
+    
+  </div>
+
+
+</article>
+
+
+  </section>
+  <script src='http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js'></script>
+  <script type='text/javascript'>
+    //<![CDATA[
+      !window.jQuery && document.write(
+        '<script src="/js/jquery-1.5.2.min.js"><\/script>');
+    //]]>
+  </script>
+  <script src='/js/modernizr-1.7.min.js'></script>
+  <script language='javascript' src='/js/mailaddr.js'></script>
+  <footer>
+    <p>
+      Copyright 2011 by Jyrki Pulliainen
+    </p>
+    <p>
+      The content is licensed under a <a rel="license"
+      href="http://creativecommons.org/licenses/by/3.0/">Creative
+      Commons Attribution 3.0 Unported License</a>.
+    </p>
+  </footer>
+
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-22601090-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+</body>

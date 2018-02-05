@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<head>
+  <!--[if lt IE 9]>
+  <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+  <meta charset='utf-8' />
+  <meta content='width=320,initial-scale=1' name='viewport' />
+  <title>Back on Linux &mdash; dywypi.org</title>
+  <meta content='Jyrki Pulliainen' name='author' />
+  
+
+<link rel="alternate" href="http://feeds.feedburner.com/dywypiorg-blog" type="application/atom+xml" title="dywypi.org" />
+
+  <link href='/css/base.css' rel='stylesheet' />
+  <link href='http://fonts.googleapis.com/css?family=Cabin:400,700' link='link' rel='stylesheet' type='text/css' />
+  
+
+<link rel="stylesheet" href="/css/pygments.css">
+
+</head>
+<body>
+  <header class='cf'>
+    <h1>
+      <a href='/'>dywypi.org</a>
+    </h1>
+  </header>
+  <section class='cf' id='main'>
+    
+  
+<article class="blogentry">
+  
+  <h1>
+    <a href="/2012/02/back-on-linux.html">Back on Linux</a>
+  </h1>
+
+  <div class="head info">
+    by <a href="/about/">Jyrki Pulliainen</a> on 2012-02-11
+  </div>
+
+  <div class="cf content">
+    <p>About a month ago I moved to Stockholm, Sweden and started working at
+<a href="http://spotify.com">Spotify</a>. A month before starting I was asked
+about my preferred setup for working. Having used OS X for year as the
+primary operating system at work the choice was clear, I wanted to go
+back to Linux, in this case to Debian to be exact.</p>
+<h2>Working with Macbook Pro, a year in retrospective, the hardware</h2>
+<p>There's one thing that really stands out of Apple's laptops, the build
+quality. The aluminium unibody is manufactured with precision, there's
+no air intakes in the bottom of the machine (this is really useful if
+you use a laptop in your lap) and the peripherals, like the touchpad,
+are top quality. I really miss those and keep on wondering why there's
+no PC manufacturers that would have the same overall quality of the
+hardware.</p>
+<p>The choices Apple has made also have drawbacks: The mini-DisplayPort
+requires you to carry around a load of adapters, the amount of USB
+ports is pretty limited and due to the missing of proper air intake
+the laptop can get pretty hot, but that was really rare in my use.</p>
+<p>Operating system OS X excelled in the hardware drivers: when you have
+limited amount of hardware you need to support, building good drivers
+for it is much easier. Feature that I probably miss the most was the
+somewhat smart handling of external displays, along with the brilliant
+multitouch gestures of the touchpad.</p>
+<h2>...and the software</h2>
+<p>However, the operating system was in no way par with the hardware.
+Biggest grief was the memory usage. Judging from the interwebs, the
+most developers purchased 8 gigabytes of memory on their machines to
+start with. I had four. For web development, Python programming and
+such four is more than plenty. Except if you're running OS X,
+apparently.</p>
+<h3>Completely failed memory management</h3>
+<p>OS X has a feature called
+<a href="http://support.apple.com/kb/HT1342">inactive memory</a>. This is memory
+that was recently used by an app you closed and can be quickly made to
+active memory if you resume to use that app. A nice concept, that
+fails miserably. OS X's documentation says, that this memory <em>may</em> be
+freed at any moment. However in practice, it just keeps on
+accumulating until you run out of free memory. In this case a sane
+option for the OS would be freeing the inactive memory. Instead the OS
+X decides to <em>swap the inactive memory on the disk</em>. So when running
+out of free memory and having a 1,5 gigabytes of inactive memory left,
+your OS starts paging the <em>unused</em> inactive memory to disk instead of freeing
+it for applications to use. Not only this causes your computer to slow
+down, it also is counter-intuitive in the terms of the original idea
+of inactive memory: when it's on disk, it definitely is not made
+active quickly.</p>
+<p>I managed to find out that this memory can be freed with combination
+of XCode's <code>purge</code>-command and repairing <em>disk</em> permissions. First
+usually freed around 200MB of memory while latter freed almost every
+bit of inactive memory. Eventually this became a daily routine. When
+arriving to work the first thing was to hit repair disk permissions
+button and do something else than actually use the computer for the
+next five to ten minutes. Sigh.</p>
+<h3>Messed up software installation</h3>
+<p>There are at least four different ways of installing software on OS X.
+Download a DMG image, drag the icon from there to Applications folder,
+run an installer, install stuff from Mac App Store or compile it
+yourself. There seems to be no standard way how to do this properly.
+Of course, being a software dev, I ended up using the last alternative
+a lot.</p>
+<p>However, someone had come up with a solution for manual installing: a
+package distribution system that takes care of all requirements for
+you. There are multiple flavours of those, I ended up using
+<a href="http://mxcl.github.com/homebrew/">homebrew</a>.</p>
+<p>When you have pretty much unified hardware (32/64-bit Intel) with
+pretty limited number of operating system versions, one could think
+that distributing binaries would be the way to go. Apparently it is
+not. Using homebrew is like using Gentoo, except that it's even more
+screwed up. There's no central repository for sources, it tries to
+download everything from the projects sites using different methods.
+After that, it compiles <em>everything</em>. Want to install library X?
+Please wait, compiling and downloading tons of crap from the
+interwebs, might take tens of minutes of wall time.</p>
+<p>And of course this does not support installing Python, Ruby, Perl on
+any other software that has its own way of distributing software. And
+in case you mix up MacPorts and homebrew, you're deeply screwed.</p>
+<p>And don't even get me started with the closed ecosystem thing Apple
+and OS X are heading towards with rapid speed.</p>
+<h2>Why Debian?</h2>
+<p>I'm a long time <a href="http://ubuntu.com">Ubuntu</a> user, but this time I
+decided to go with <a href="http://debian.org">Debian</a>. Why? Mostly because
+our servers are Debian and because latest updates of Ubuntu have
+mostly focused on breaking the desktop environment. With Debian
+Squeeze I get the old and reliable Gnome 2.30 with the ability of
+pinning newer packages from either backports or from testing and
+unstable distributions.</p>
+<p>Most notably I get the ultimate software installation tool, <code>apt-get</code>.
+A tool that installs <em>binary</em> packages with their dependencies. A
+tool, that's universally supported by Google et al., so I don't even
+have any problems installing newest Chrome, for example.</p>
+<p>Linux in general brings other improvements with it, like working
+command line tools. GNU version of common tools like find and grep are
+much more powerful when compared to the BSD alternatives available on
+OS X.</p>
+<h2>Do I miss something?</h2>
+<p>Sure. Even though Linux in modern times mostly works out of the box,
+there's still slight issues with external displays, for example I
+can't set the 30" Dell monitor at work to be the only display without
+doing some <code>xrand</code> magic. I guess that's really the only thing I'm
+missing from OS X, a sane and automatic way of handling external
+displays. I also miss the Macbook's superior touchpad, the joystick of
+Lenovo is nothing in comparison.</p>
+<p>Would I consider switching back? No. I got working virtual desktops,
+package manager and properly working memory model now, currently using
+3 gigabytes out of total eight, and it includes running four virtual
+machines 512 megs of memory each.</p>
+<p>So long OS X. You were a nice experiment and I miss some parts of you,
+however we definitely were not a match made in heaven.</p>
+
+    
+    <div class="tail info">
+      <p>If you want to comment this blog post, just send mail
+        to <span class="ma b">my firstname + blog @ thisdomain.tld</span>.
+        If the question is a proper one, it might get answered. Good ones
+        might even end up on the site.</p>
+
+      <p>Tags:
+        
+        <a href="/tags/osx/">osx</a>
+        
+        <a href="/tags/debian/">debian</a>
+        
+        <a href="/tags/linux/">linux</a>
+        </p>
+    </div>
+    
+  </div>
+
+
+</article>
+
+
+  </section>
+  <script src='http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js'></script>
+  <script type='text/javascript'>
+    //<![CDATA[
+      !window.jQuery && document.write(
+        '<script src="/js/jquery-1.5.2.min.js"><\/script>');
+    //]]>
+  </script>
+  <script src='/js/modernizr-1.7.min.js'></script>
+  <script language='javascript' src='/js/mailaddr.js'></script>
+  <footer>
+    <p>
+      Copyright 2011 by Jyrki Pulliainen
+    </p>
+    <p>
+      The content is licensed under a <a rel="license"
+      href="http://creativecommons.org/licenses/by/3.0/">Creative
+      Commons Attribution 3.0 Unported License</a>.
+    </p>
+  </footer>
+
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-22601090-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+</body>

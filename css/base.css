@@ -1,0 +1,216 @@
+html {
+  overflow-y: scroll; }
+
+html, body {
+  margin: 0;
+  padding: 0; }
+
+body {
+  background-color: #000;
+  background-image: url(http://photojournal.jpl.nasa.gov/jpeg/PIA11621.jpg);
+  background-repeat: no-repeat;
+  background-position: bottom left;
+  margin: 0 auto;
+  font-family: 'Cabin', sans-serif;
+  font-weight: 400; }
+  body > header > nav > ul {
+    list-style: none;
+    margin: 0;
+    padding: 0; }
+    body > header > nav > ul > li {
+      display: block;
+      float: left;
+      text-lowercase: uppercase; }
+      body > header > nav > ul > li a {
+        color: #f5f5f5;
+        display: block;
+        text-shadow: 0px 1px 0px white; }
+  body > header h1 {
+    margin: 0;
+    padding: 0;
+    text-shadow: 0px 1px 0px black; }
+    body > header h1 a, body > header h1 a:link, body > header h1 a:visited {
+      color: #f5f5f5; }
+  body > footer {
+    font-size: 14px;
+    color: #f5f5f5;
+    text-align: right;
+    margin-top: 48px; }
+    body > footer a, body > footer a:link, body > footer a:visited {
+      color: #f5f5f5; }
+
+/* Clearfix hack from http://nicolasgallagher.com/micro-clearfix-hack/ */
+/* For modern browsers */
+.cf:before, .cf:after {
+  content: "";
+  display: table; }
+
+.cf:after {
+  clear: both; }
+
+/* For IE 6/7 (trigger hasLayout) */
+.cf {
+  zoom: 1; }
+
+a, a:link, a:visited {
+  color: black;
+  text-decoration: none; }
+
+.info {
+  font-size: small; }
+
+.tail {
+  border-top: 1px solid #cecece; }
+
+@media only screen and (min-width: 320px) {
+  body {
+    width: 264px; }
+    body > header {
+      display: block;
+      height: 64px; }
+
+  h1 {
+    float: right;
+    font-weight: 700; }
+
+  .blogentry {
+    background: #fff; }
+    .blogentry > h1 {
+      float: none;
+      margin: 0;
+      letter-spacing: 1px;
+      padding: 12px 0 0 12px;
+      font-size: 24px;
+      font-weight: 400; }
+    .blogentry .head {
+      padding-left: 12px; }
+    .blogentry > .content {
+      padding: 24px 12px; }
+      .blogentry > .content a {
+        text-decoration: underline; }
+
+  #main {
+    margin-left: -12px; }
+    #main > article.front {
+      width: 264px;
+      background-color: #fff;
+      margin-bottom: 12px;
+      margin-left: 12px;
+      padding-bottom: 24px;
+      padding-top: 24px;
+      overflow: hidden;
+      display: block;
+      position: relative;
+      -webkit-transition: background-color .5s ease-in-out;
+      -moz-transition: background-color .5s ease-in-out; }
+      #main > article.front:hover {
+        background-color: #f5f5f5; }
+      #main > article.front > div {
+        width: 264px; }
+        #main > article.front > div > header {
+          width: 264px; }
+          #main > article.front > div > header a > span {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1; }
+        #main > article.front > div > footer {
+          width: 264px; }
+          #main > article.front > div > footer > div {
+            padding: 0 12px; }
+      #main > article.front h2 {
+        font-size: 20px;
+        padding: 0;
+        margin: 12px; } }
+
+@media only screen and (min-width: 480px) {
+  body {
+    width: 408px; }
+
+  .blogentry {
+    background: #fff; }
+    .blogentry > h1 {
+      float: none;
+      margin: 0;
+      letter-spacing: 1px;
+      padding: 12px 0 0 12px;
+      font-size: 24px;
+      font-weight: 400; }
+    .blogentry .head {
+      padding-left: 12px; }
+    .blogentry > .content {
+      padding: 24px 12px; }
+      .blogentry > .content a {
+        text-decoration: underline; }
+
+  #main > article.front {
+    width: 192px;
+    height: 192px;
+    float: left;
+    padding: 0; }
+    #main > article.front:first-child {
+      float: none;
+      width: 408px; }
+      #main > article.front:first-child:hover > div {
+        margin-left: 0; }
+    #main > article.front:hover > div {
+      margin-left: -204px; }
+    #main > article.front > div {
+      -webkit-transition: margin-left .5s ease-in-out;
+      -moz-transition: margin-left .5s ease-in-out;
+      width: 408px;
+      clear: both; }
+      #main > article.front > div > header {
+        float: left;
+        height: 100%;
+        width: 192px; }
+      #main > article.front > div > footer {
+        float: left;
+        width: 192px; } }
+
+@media only screen and (min-width: 768px) {
+  body {
+    width: 552px; }
+    body > header {
+      height: 96px; }
+
+  .blogentry > h1 {
+    padding: 24px 0 0 24px;
+    font-size: 36px; }
+  .blogentry .head {
+    padding-left: 24px; }
+  .blogentry > .content {
+    padding: 48px 24px; }
+
+  #main {
+    margin-left: -24px; }
+    #main > article.front {
+      width: 264px;
+      margin-bottom: 24px;
+      margin-left: 24px; }
+      #main > article.front:first-child {
+        width: 552px; }
+        #main > article.front:first-child:hover > div {
+          margin-left: 0; }
+      #main > article.front:hover > div {
+        margin-left: -264px; }
+      #main > article.front > div {
+        width: 552px; }
+        #main > article.front > div > header {
+          width: 264px; }
+        #main > article.front > div > footer {
+          width: 264px; }
+          #main > article.front > div > footer > div {
+            padding: 0 24px; }
+      #main > article.front h2 {
+        font-size: 24px;
+        margin: 24px; } }
+
+@media only screen and (min-width: 900px) {
+  body {
+    width: 840px; }
+
+  #main > article.front:first-child {
+    width: 840px; } }

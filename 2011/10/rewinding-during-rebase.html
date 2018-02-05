@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<head>
+  <!--[if lt IE 9]>
+  <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+  <meta charset='utf-8' />
+  <meta content='width=320,initial-scale=1' name='viewport' />
+  <title>Rewinding during rebase &mdash; dywypi.org</title>
+  <meta content='Jyrki Pulliainen' name='author' />
+  
+
+<link rel="alternate" href="http://feeds.feedburner.com/dywypiorg-blog" type="application/atom+xml" title="dywypi.org" />
+
+  <link href='/css/base.css' rel='stylesheet' />
+  <link href='http://fonts.googleapis.com/css?family=Cabin:400,700' link='link' rel='stylesheet' type='text/css' />
+  
+
+<link rel="stylesheet" href="/css/pygments.css">
+
+</head>
+<body>
+  <header class='cf'>
+    <h1>
+      <a href='/'>dywypi.org</a>
+    </h1>
+  </header>
+  <section class='cf' id='main'>
+    
+  
+<article class="blogentry">
+  
+  <h1>
+    <a href="/2011/10/rewinding-during-rebase.html">Rewinding during rebase</a>
+  </h1>
+
+  <div class="head info">
+    by <a href="/about/">Jyrki Pulliainen</a> on 2011-10-11
+  </div>
+
+  <div class="cf content">
+    <p>A fellow pythonaut asked a question on #python.fi IRC channel: would
+it be possible to "rewind" during <code>git rebase --interactive</code>? He
+wanted to go back and edit a few commits during his massive rebase
+operation and then continue the operation from the same point.</p>
+<h2>Initial situation</h2>
+<p>I assume you know in general what
+<a href="http://help.github.com/rebase/">rebase</a> does (too bad the kernel.org
+has no longer the man pages, or anything to that matter, served). If
+not, I suggest to check that previous link or to run <code>git help
+rebase</code> on your commandline.</p>
+<p>Now, let's assume you have following repository structure:</p>
+<pre>
+      D - E - F (*another-branch)
+     /
+A - B - C (master)
+</pre>
+
+<p>You want to rebase <code>another-branch</code> on top of the <code>master</code> and edit
+every one of those commits on the way. Naturally, you use <code>git rebase
+--interactive master</code> while checked in <code>another-branch</code>. Now you edit
+commits D and E, transforming them to D' and E' respectively, and you
+have a following repository structure (in middle of the rebase):</p>
+<pre>
+      D - E - F (another-branch)
+     /
+A - B - C - D' - E' - F' (HEAD)
+        ^
+      master
+</pre>
+
+<p>Now, while editing F, you notice that you forgot to add something in
+D while rebasing it. Traditionally, the two options here are to abort
+rebase, rebase again and correct mistakes or to skip remaining commits
+and manually cherry-pick them back after rebase. But let's assume
+you've modified a load of commits and need to modify yet another load
+of commits in this rebase, so you don't want to abort. The solution?
+Let's just mimic how the rebase works!</p>
+<h2>Magic part: Rewinding in rebase!</h2>
+<p>First: Let's create us a point to return to by creating a temporary
+branch in the F commit: <code>git branch continue</code>. So you have following
+structure now:</p>
+<pre>
+      D - E - F (another-branch)
+     /
+A - B - C - D' - E' - F' (HEAD/continue)
+        ^
+      master
+</pre>
+
+<p>Next we'll check out the commit we want to modify: <code>git checkout D'</code>
+and hack it for the parts needed. After hacking, we'll
+replay the rebase: Technically rebase with edits is just cherry
+picking of commits, so well do that. First let's see what to
+cherry-pick by running <code>git log continue</code>, which returns something
+like this:</p>
+<pre>
+486106d edit edit (F)
+ea857b6 Moar edits (E')
+</pre>
+
+<p>While repository looks like this:
+<pre>
+      D - E - F (another-branch)
+     /
+A - B - C - D'' - E' - F' (continue)
+        ^   ^
+   master   HEAD
+</pre></p>
+<p>Now we just replay the rebase by issuing <code>git cherry-pick ea857b6</code> and
+<code>git-cherry-pick 486106d</code>. Now we're back at the point where we
+rewinded to the D' and can continue rebase normally! Just do the edits
+on the F you need to do and say <code>git rebase --continue</code> and you'll get
+on with your rebase, and finally the tree looks like this:</p>
+<pre>
+A - B - C - D'' - E' - F (HEAD/another-branch)
+        ^
+   master
+</pre>
+
+<h2>Word of caution</h2>
+<p>This is more of a proof of concept trick and has worked on one real
+life scenario (and I've tested it on simulated environment), but I
+recommend you to back up your working directory / <code>.git</code> before trying
+this at home.</p>
+<p>Or (thanks <a href="http://twitter.com/akhern">Akheron</a>) true warrior just
+digs through reflog and does not waste extra disk space for puny backups!</p>
+
+    
+    <div class="tail info">
+      <p>If you want to comment this blog post, just send mail
+        to <span class="ma b">my firstname + blog @ thisdomain.tld</span>.
+        If the question is a proper one, it might get answered. Good ones
+        might even end up on the site.</p>
+
+      <p>Tags:
+        
+        <a href="/tags/git/">git</a>
+        
+        <a href="/tags/version-control/">version-control</a>
+        
+        <a href="/tags/howto/">howto</a>
+        </p>
+    </div>
+    
+  </div>
+
+
+</article>
+
+
+  </section>
+  <script src='http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js'></script>
+  <script type='text/javascript'>
+    //<![CDATA[
+      !window.jQuery && document.write(
+        '<script src="/js/jquery-1.5.2.min.js"><\/script>');
+    //]]>
+  </script>
+  <script src='/js/modernizr-1.7.min.js'></script>
+  <script language='javascript' src='/js/mailaddr.js'></script>
+  <footer>
+    <p>
+      Copyright 2011 by Jyrki Pulliainen
+    </p>
+    <p>
+      The content is licensed under a <a rel="license"
+      href="http://creativecommons.org/licenses/by/3.0/">Creative
+      Commons Attribution 3.0 Unported License</a>.
+    </p>
+  </footer>
+
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-22601090-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+</body>

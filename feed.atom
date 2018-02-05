@@ -1,0 +1,775 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  
+  <title>dywypi.org blog</title>
+  
+  <link href="http://dywypi.org/" />
+  <updated>2014-10-22T00:00:00Z</updated>
+  <author>
+    <name>Jyrki Pulliainen</name>
+    <uri>http://dywypi.org/</uri>
+  </author>
+  <id>http://dywypi.org/feed.atom</id>
+
+  
+  <entry>
+    <title>Debian Packaging - Part 1: Basics</title>
+    <link href="http://dywypi.org/2014/10/debian-packaging--part-1-basics.html" />
+    <id>http://dywypi.org/2014/10/debian-packaging--part-1-basics.html</id>
+    <updated>2014-10-22 00:00:00</updated>
+    
+    <category term="debian" />
+    
+    <category term="linux" />
+    
+    <category term="sysadmin" />
+    
+    <category term="packaging" />
+    
+    <content type="html">
+      &lt;p&gt;Packaging systems are complicated. And opionated. However, this blog
+post is not to tell what is the best packaging system available. They
+all excel and suck in different ways.&lt;/p&gt;
+&lt;p&gt;This series of blog posts is trying the shed some light into the
+Debian packaging. This is the first part where we will dive into the
+basics of the Debian packages. The series is not looking into
+particular ways of installing the packages (tools like &lt;code&gt;apt-get&lt;/code&gt; or
+&lt;code&gt;aptitude&lt;/code&gt;).&lt;/p&gt;
+&lt;p&gt;This series also looks these things from the Debian perspective. While
+derivatives, like Ubuntu, differ a bit, most of this guide still
+holds.&lt;/p&gt;
+&lt;h2&gt;A Debian Package&lt;/h2&gt;
+&lt;p&gt;Debian package itself is a fairly simple thing. The package has a
+filename, which is in format &lt;code&gt;&amp;lt;name&amp;gt;_&amp;lt;version&amp;gt;_&amp;lt;architecture&amp;gt;.deb&lt;/code&gt;.
+Name is pretty self-explaining, version and architecture parts are a
+bit more interesting.&lt;/p&gt;
+&lt;h3&gt;Filename&lt;/h3&gt;
+&lt;p&gt;Let&#39;s pick a sample package. If you have an access to a Debian box,
+you can find a pile of packages in the apt-tool&#39;s cache under
+&lt;code&gt;/var/cache/apt/archives&lt;/code&gt;. Anyway, here is our brave example-package:
+&lt;code&gt;xfonts-100dpi_1%3a1.0.3_all.deb&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;So, as stated before, the name is a simple thing. In this case the
+name is &#34;xfonts-100dpi&#34;. Version is &lt;code&gt;1%3a1.0.3&lt;/code&gt;. The &lt;code&gt;%3a&lt;/code&gt; is an
+escaped colon, so the version actually is &lt;code&gt;1:1.0.3&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;The version has a lot in it, so let&#39;s split it a bit. &lt;code&gt;1&lt;/code&gt;, before the
+colon, is an &#34;epoch&#34;. It is kind of a safety valve for upstream
+mishaps. If the upstream version, &lt;code&gt;1.0.3&lt;/code&gt; in this case, gets transformed
+to something that no longer lexicographically orders correctly, the
+epoch can be used to overwrite that. An example could be a package
+first versioned with date (&lt;code&gt;20141022&lt;/code&gt;) and then later changed to more
+traditional semantic versioning (&lt;code&gt;1.0&lt;/code&gt;). In this case the &lt;code&gt;1.0&lt;/code&gt; would
+be deemed an earlier release. Epoch allows Debian package maintainer
+to keep the sorting of the versions correct while still using the new
+upstream version. Of course this is a handy way to fix the mishaps of
+the maintainer.&lt;/p&gt;
+&lt;p&gt;After the upstream version follows Debian packaging version. This is
+the iteration of the Debian packaging for &lt;em&gt;this&lt;/em&gt; upstream version. It
+is customary to reset it back to 1 if a new upstream version is
+released. Not all packages have the Debian packaging version. In that
+case they are packages maintained in the Debian, not based on anything
+upstream outside the Debian project.&lt;/p&gt;
+&lt;p&gt;If you are interested in the versioning or sorting of versions, the
+&lt;a href=&#34;https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Version&#34;&gt;Debian Policy Manual&lt;/a&gt;
+contains a pretty good explanation about that.&lt;/p&gt;
+&lt;h3&gt;File format&lt;/h3&gt;
+&lt;p&gt;Like the file name, the format is not too complicated either. Debian
+packages are standard &lt;code&gt;ar&lt;/code&gt; archives. The archive includes two &lt;code&gt;tar&lt;/code&gt;
+archives, which can be compressed. One of these archives contains the
+software, the other one contains the metadata of the package. Third
+file in the package is a version number of the &lt;code&gt;deb&lt;/code&gt; file. It contains
+2.0 for current versions. Using our example package, this is what it
+(and any other package) contains:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$ ar -tf xfonts-100dpi_1%3a1.0.3_all.deb
+debian-binary
+control.tar.gz
+data.tar.gz
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;Package Metadata&lt;/h3&gt;
+&lt;p&gt;If we unpack the package and look into the control file, we see a
+bunch of files:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$ tar tf control.tar.gz
+./
+./postinst
+./postrm
+./conffiles
+./control
+./md5sums
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;We&#39;ll dive into these files a bit deeper in the upcoming parts, but a
+short primer is in place. &lt;code&gt;control&lt;/code&gt; contains the metadata of the
+software, like dependencies, maintainer and version among others.&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;md5sums&lt;/code&gt; contains, as name suggests, the MD5 checksums of the
+files in the package. The &lt;code&gt;conffiles&lt;/code&gt; contains listing of all the
+configuration files this package has.&lt;/p&gt;
+&lt;p&gt;More interesting parts are the &lt;code&gt;postinst&lt;/code&gt; and &lt;code&gt;postrm&lt;/code&gt; files. There
+are two additional files not present in our test package, &lt;code&gt;prerm&lt;/code&gt; and
+&lt;code&gt;preinst&lt;/code&gt;. As names suggest, these files are ran before the removal
+(prerm) and installation (preinst) as well as after the removal
+(postrm) and installation (postrm). The files are just ordinary shell
+scripts called with certain set of parameters, depending on the
+situation. The
+&lt;a href=&#34;https://wiki.debian.org/MaintainerScripts&#34;&gt;Debian wiki&lt;/a&gt; has informal
+flowcharts of what happens in the installation.&lt;/p&gt;
+&lt;p&gt;All these files of the existing, installed, packages are also
+available under &lt;code&gt;/var/lib/dpkg/info&lt;/code&gt;. This is especially useful if an
+installation ends up in a some sort of limbo due to for example a
+buggy postinst file. In that case the file can just be modified in
+place under the &lt;code&gt;info&lt;/code&gt; folder and the installation continued.&lt;/p&gt;
+&lt;h2&gt;Creating packages&lt;/h2&gt;
+&lt;p&gt;So there you go: a quick primer to the Debian packages. In the next
+part we will look into creating Debian packages.&lt;/p&gt;
+    </content>
+  </entry>
+  
+  <entry>
+    <title>Back on Linux</title>
+    <link href="http://dywypi.org/2012/02/back-on-linux.html" />
+    <id>http://dywypi.org/2012/02/back-on-linux.html</id>
+    <updated>2012-02-11 00:00:00</updated>
+    
+    <category term="osx" />
+    
+    <category term="debian" />
+    
+    <category term="linux" />
+    
+    <content type="html">
+      &lt;p&gt;About a month ago I moved to Stockholm, Sweden and started working at
+&lt;a href=&#34;http://spotify.com&#34;&gt;Spotify&lt;/a&gt;. A month before starting I was asked
+about my preferred setup for working. Having used OS X for year as the
+primary operating system at work the choice was clear, I wanted to go
+back to Linux, in this case to Debian to be exact.&lt;/p&gt;
+&lt;h2&gt;Working with Macbook Pro, a year in retrospective, the hardware&lt;/h2&gt;
+&lt;p&gt;There&#39;s one thing that really stands out of Apple&#39;s laptops, the build
+quality. The aluminium unibody is manufactured with precision, there&#39;s
+no air intakes in the bottom of the machine (this is really useful if
+you use a laptop in your lap) and the peripherals, like the touchpad,
+are top quality. I really miss those and keep on wondering why there&#39;s
+no PC manufacturers that would have the same overall quality of the
+hardware.&lt;/p&gt;
+&lt;p&gt;The choices Apple has made also have drawbacks: The mini-DisplayPort
+requires you to carry around a load of adapters, the amount of USB
+ports is pretty limited and due to the missing of proper air intake
+the laptop can get pretty hot, but that was really rare in my use.&lt;/p&gt;
+&lt;p&gt;Operating system OS X excelled in the hardware drivers: when you have
+limited amount of hardware you need to support, building good drivers
+for it is much easier. Feature that I probably miss the most was the
+somewhat smart handling of external displays, along with the brilliant
+multitouch gestures of the touchpad.&lt;/p&gt;
+&lt;h2&gt;...and the software&lt;/h2&gt;
+&lt;p&gt;However, the operating system was in no way par with the hardware.
+Biggest grief was the memory usage. Judging from the interwebs, the
+most developers purchased 8 gigabytes of memory on their machines to
+start with. I had four. For web development, Python programming and
+such four is more than plenty. Except if you&#39;re running OS X,
+apparently.&lt;/p&gt;
+&lt;h3&gt;Completely failed memory management&lt;/h3&gt;
+&lt;p&gt;OS X has a feature called
+&lt;a href=&#34;http://support.apple.com/kb/HT1342&#34;&gt;inactive memory&lt;/a&gt;. This is memory
+that was recently used by an app you closed and can be quickly made to
+active memory if you resume to use that app. A nice concept, that
+fails miserably. OS X&#39;s documentation says, that this memory &lt;em&gt;may&lt;/em&gt; be
+freed at any moment. However in practice, it just keeps on
+accumulating until you run out of free memory. In this case a sane
+option for the OS would be freeing the inactive memory. Instead the OS
+X decides to &lt;em&gt;swap the inactive memory on the disk&lt;/em&gt;. So when running
+out of free memory and having a 1,5 gigabytes of inactive memory left,
+your OS starts paging the &lt;em&gt;unused&lt;/em&gt; inactive memory to disk instead of freeing
+it for applications to use. Not only this causes your computer to slow
+down, it also is counter-intuitive in the terms of the original idea
+of inactive memory: when it&#39;s on disk, it definitely is not made
+active quickly.&lt;/p&gt;
+&lt;p&gt;I managed to find out that this memory can be freed with combination
+of XCode&#39;s &lt;code&gt;purge&lt;/code&gt;-command and repairing &lt;em&gt;disk&lt;/em&gt; permissions. First
+usually freed around 200MB of memory while latter freed almost every
+bit of inactive memory. Eventually this became a daily routine. When
+arriving to work the first thing was to hit repair disk permissions
+button and do something else than actually use the computer for the
+next five to ten minutes. Sigh.&lt;/p&gt;
+&lt;h3&gt;Messed up software installation&lt;/h3&gt;
+&lt;p&gt;There are at least four different ways of installing software on OS X.
+Download a DMG image, drag the icon from there to Applications folder,
+run an installer, install stuff from Mac App Store or compile it
+yourself. There seems to be no standard way how to do this properly.
+Of course, being a software dev, I ended up using the last alternative
+a lot.&lt;/p&gt;
+&lt;p&gt;However, someone had come up with a solution for manual installing: a
+package distribution system that takes care of all requirements for
+you. There are multiple flavours of those, I ended up using
+&lt;a href=&#34;http://mxcl.github.com/homebrew/&#34;&gt;homebrew&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;When you have pretty much unified hardware (32/64-bit Intel) with
+pretty limited number of operating system versions, one could think
+that distributing binaries would be the way to go. Apparently it is
+not. Using homebrew is like using Gentoo, except that it&#39;s even more
+screwed up. There&#39;s no central repository for sources, it tries to
+download everything from the projects sites using different methods.
+After that, it compiles &lt;em&gt;everything&lt;/em&gt;. Want to install library X?
+Please wait, compiling and downloading tons of crap from the
+interwebs, might take tens of minutes of wall time.&lt;/p&gt;
+&lt;p&gt;And of course this does not support installing Python, Ruby, Perl on
+any other software that has its own way of distributing software. And
+in case you mix up MacPorts and homebrew, you&#39;re deeply screwed.&lt;/p&gt;
+&lt;p&gt;And don&#39;t even get me started with the closed ecosystem thing Apple
+and OS X are heading towards with rapid speed.&lt;/p&gt;
+&lt;h2&gt;Why Debian?&lt;/h2&gt;
+&lt;p&gt;I&#39;m a long time &lt;a href=&#34;http://ubuntu.com&#34;&gt;Ubuntu&lt;/a&gt; user, but this time I
+decided to go with &lt;a href=&#34;http://debian.org&#34;&gt;Debian&lt;/a&gt;. Why? Mostly because
+our servers are Debian and because latest updates of Ubuntu have
+mostly focused on breaking the desktop environment. With Debian
+Squeeze I get the old and reliable Gnome 2.30 with the ability of
+pinning newer packages from either backports or from testing and
+unstable distributions.&lt;/p&gt;
+&lt;p&gt;Most notably I get the ultimate software installation tool, &lt;code&gt;apt-get&lt;/code&gt;.
+A tool that installs &lt;em&gt;binary&lt;/em&gt; packages with their dependencies. A
+tool, that&#39;s universally supported by Google et al., so I don&#39;t even
+have any problems installing newest Chrome, for example.&lt;/p&gt;
+&lt;p&gt;Linux in general brings other improvements with it, like working
+command line tools. GNU version of common tools like find and grep are
+much more powerful when compared to the BSD alternatives available on
+OS X.&lt;/p&gt;
+&lt;h2&gt;Do I miss something?&lt;/h2&gt;
+&lt;p&gt;Sure. Even though Linux in modern times mostly works out of the box,
+there&#39;s still slight issues with external displays, for example I
+can&#39;t set the 30&#34; Dell monitor at work to be the only display without
+doing some &lt;code&gt;xrand&lt;/code&gt; magic. I guess that&#39;s really the only thing I&#39;m
+missing from OS X, a sane and automatic way of handling external
+displays. I also miss the Macbook&#39;s superior touchpad, the joystick of
+Lenovo is nothing in comparison.&lt;/p&gt;
+&lt;p&gt;Would I consider switching back? No. I got working virtual desktops,
+package manager and properly working memory model now, currently using
+3 gigabytes out of total eight, and it includes running four virtual
+machines 512 megs of memory each.&lt;/p&gt;
+&lt;p&gt;So long OS X. You were a nice experiment and I miss some parts of you,
+however we definitely were not a match made in heaven.&lt;/p&gt;
+    </content>
+  </entry>
+  
+  <entry>
+    <title>Rewinding during rebase</title>
+    <link href="http://dywypi.org/2011/10/rewinding-during-rebase.html" />
+    <id>http://dywypi.org/2011/10/rewinding-during-rebase.html</id>
+    <updated>2011-10-11 00:00:00</updated>
+    
+    <category term="git" />
+    
+    <category term="version-control" />
+    
+    <category term="howto" />
+    
+    <content type="html">
+      &lt;p&gt;A fellow pythonaut asked a question on #python.fi IRC channel: would
+it be possible to &#34;rewind&#34; during &lt;code&gt;git rebase --interactive&lt;/code&gt;? He
+wanted to go back and edit a few commits during his massive rebase
+operation and then continue the operation from the same point.&lt;/p&gt;
+&lt;h2&gt;Initial situation&lt;/h2&gt;
+&lt;p&gt;I assume you know in general what
+&lt;a href=&#34;http://help.github.com/rebase/&#34;&gt;rebase&lt;/a&gt; does (too bad the kernel.org
+has no longer the man pages, or anything to that matter, served). If
+not, I suggest to check that previous link or to run &lt;code&gt;git help
+rebase&lt;/code&gt; on your commandline.&lt;/p&gt;
+&lt;p&gt;Now, let&#39;s assume you have following repository structure:&lt;/p&gt;
+&lt;pre&gt;
+      D - E - F (*another-branch)
+     /
+A - B - C (master)
+&lt;/pre&gt;
+
+&lt;p&gt;You want to rebase &lt;code&gt;another-branch&lt;/code&gt; on top of the &lt;code&gt;master&lt;/code&gt; and edit
+every one of those commits on the way. Naturally, you use &lt;code&gt;git rebase
+--interactive master&lt;/code&gt; while checked in &lt;code&gt;another-branch&lt;/code&gt;. Now you edit
+commits D and E, transforming them to D&#39; and E&#39; respectively, and you
+have a following repository structure (in middle of the rebase):&lt;/p&gt;
+&lt;pre&gt;
+      D - E - F (another-branch)
+     /
+A - B - C - D&#39; - E&#39; - F&#39; (HEAD)
+        ^
+      master
+&lt;/pre&gt;
+
+&lt;p&gt;Now, while editing F, you notice that you forgot to add something in
+D while rebasing it. Traditionally, the two options here are to abort
+rebase, rebase again and correct mistakes or to skip remaining commits
+and manually cherry-pick them back after rebase. But let&#39;s assume
+you&#39;ve modified a load of commits and need to modify yet another load
+of commits in this rebase, so you don&#39;t want to abort. The solution?
+Let&#39;s just mimic how the rebase works!&lt;/p&gt;
+&lt;h2&gt;Magic part: Rewinding in rebase!&lt;/h2&gt;
+&lt;p&gt;First: Let&#39;s create us a point to return to by creating a temporary
+branch in the F commit: &lt;code&gt;git branch continue&lt;/code&gt;. So you have following
+structure now:&lt;/p&gt;
+&lt;pre&gt;
+      D - E - F (another-branch)
+     /
+A - B - C - D&#39; - E&#39; - F&#39; (HEAD/continue)
+        ^
+      master
+&lt;/pre&gt;
+
+&lt;p&gt;Next we&#39;ll check out the commit we want to modify: &lt;code&gt;git checkout D&#39;&lt;/code&gt;
+and hack it for the parts needed. After hacking, we&#39;ll
+replay the rebase: Technically rebase with edits is just cherry
+picking of commits, so well do that. First let&#39;s see what to
+cherry-pick by running &lt;code&gt;git log continue&lt;/code&gt;, which returns something
+like this:&lt;/p&gt;
+&lt;pre&gt;
+486106d edit edit (F)
+ea857b6 Moar edits (E&#39;)
+&lt;/pre&gt;
+
+&lt;p&gt;While repository looks like this:
+&lt;pre&gt;
+      D - E - F (another-branch)
+     /
+A - B - C - D&#39;&#39; - E&#39; - F&#39; (continue)
+        ^   ^
+   master   HEAD
+&lt;/pre&gt;&lt;/p&gt;
+&lt;p&gt;Now we just replay the rebase by issuing &lt;code&gt;git cherry-pick ea857b6&lt;/code&gt; and
+&lt;code&gt;git-cherry-pick 486106d&lt;/code&gt;. Now we&#39;re back at the point where we
+rewinded to the D&#39; and can continue rebase normally! Just do the edits
+on the F you need to do and say &lt;code&gt;git rebase --continue&lt;/code&gt; and you&#39;ll get
+on with your rebase, and finally the tree looks like this:&lt;/p&gt;
+&lt;pre&gt;
+A - B - C - D&#39;&#39; - E&#39; - F (HEAD/another-branch)
+        ^
+   master
+&lt;/pre&gt;
+
+&lt;h2&gt;Word of caution&lt;/h2&gt;
+&lt;p&gt;This is more of a proof of concept trick and has worked on one real
+life scenario (and I&#39;ve tested it on simulated environment), but I
+recommend you to back up your working directory / &lt;code&gt;.git&lt;/code&gt; before trying
+this at home.&lt;/p&gt;
+&lt;p&gt;Or (thanks &lt;a href=&#34;http://twitter.com/akhern&#34;&gt;Akheron&lt;/a&gt;) true warrior just
+digs through reflog and does not waste extra disk space for puny backups!&lt;/p&gt;
+    </content>
+  </entry>
+  
+  <entry>
+    <title>Mobile Web Development and Maps</title>
+    <link href="http://dywypi.org/2011/07/mobile-web-development-and-maps.html" />
+    <id>http://dywypi.org/2011/07/mobile-web-development-and-maps.html</id>
+    <updated>2011-07-28 00:00:00</updated>
+    
+    <category term="mobile" />
+    
+    <category term="web" />
+    
+    <category term="maps" />
+    
+    <category term="geolocation" />
+    
+    <category term="integration" />
+    
+    <content type="html">
+      &lt;p&gt;Lately I&#39;ve been working on
+&lt;a href=&#34;http://m.juhlaviikot.fi&#34;&gt;Helsinki Festival mobile site&lt;/a&gt; (in Finnish).
+The main idea of the site is to provide mobile information for users,
+including location and maps of the venues. While implementing the
+venue locations and other, yet upcoming, features, I&#39;ve run in to a
+series of problems of which some should be shared to the wild.&lt;/p&gt;
+&lt;h2&gt;Supporting wide range of devices&lt;/h2&gt;
+&lt;p&gt;Due to heterogeneity of attendees the site should support a wide range
+of devices. At &lt;a href=&#34;http://taiste.fi&#34;&gt;Taiste&lt;/a&gt; we sport a few test devices:
+iPhone 4, HTC Desire with original firmware and another one rooted
+with &lt;a href=&#34;http://cyangenmod.com&#34;&gt;Cyanogenmod&lt;/a&gt; and two Nokia devices, the
+flagship N8 and an older E75. Pretty decent coverage of mobile
+platforms in circulation in Finland.&lt;/p&gt;
+&lt;p&gt;I&#39;m not going to discuss about rendering woes and missing &lt;code&gt;&amp;lt;meta
+name=&#34;viewport&#34;&amp;gt;&lt;/code&gt; support here, even though they are challenges that
+just need to be handled when building a site like this. The problem I
+want to focus on is the functionality of maps and navigation on a
+mobile web site.&lt;/p&gt;
+&lt;h2&gt;Displaying a map&lt;/h2&gt;
+&lt;p&gt;I started with a dual-mode map: A static image, courtesy of Google,
+for devices without proper JavaScript support and a fancy embedded
+Google Map for devices with JavaScript support. However, this turned
+out to be a bit problematic.&lt;/p&gt;
+&lt;p&gt;First caveat: scrolling. On touch screen phones the scrolling of venue
+pages, which have embedded map, was misleading; if user started
+scrolling (i.e. placed her finger) on the map, she would end up
+scrolling the map instead of the site. By scrolling the map user would
+also lose sight of the marker, placed on the map. On
+&lt;a href=&#34;http://code.google.com/apis/maps/index.html&#34;&gt;Google Maps API&lt;/a&gt; this is
+fairly easy to disable just by passing &lt;code&gt;draggable: false&lt;/code&gt; to options
+of the constructor of a &lt;code&gt;Map&lt;/code&gt; object.&lt;/p&gt;
+&lt;p&gt;Second caveat: The marker. On the embedded map we drew a nice yellow
+marker. However, the Nokia N8 failed to display this marker. According
+to my debugging sessions the problem resides somewhere in the Google&#39;s
+Map Marker API, though I can&#39;t say for sure. The phone does not report
+any JavaScript errors, so it must be rendering the Marker to a wrong
+place or underneath the map element (if it renders it at all). Even
+with furious debugging applied, the marker could not be seen on the
+map.&lt;/p&gt;
+&lt;p&gt;Now the second problem was a bit harder to solve: there didn&#39;t seem to
+be any way we could solve it. The N8 sports a Symbian browser 7.2,
+which is equipped with Webkit version 525, the
+&lt;a href=&#34;http://www.quirksmode.org/webkit.html#link2&#34;&gt;same version Chrome 1.0, iPhone 2.2 and Android 1.0 had in 2008&lt;/a&gt;,
+except that somehow it&#39;s crappier than those. Luckily, the new Symbian
+Anna upgrade should bring Browser 7.3, which has a newer webkit and
+it even includes &lt;code&gt;viewport&lt;/code&gt; meta-tag support!&lt;/p&gt;
+&lt;p&gt;To overcome these two problems I wrote a custom template tag that just
+outputs an &lt;code&gt;img&lt;/code&gt; tag that has an URL to a 240x240 map picture (240 is
+the smallest horizontal resolution we support) showing the location.
+The &lt;code&gt;img&lt;/code&gt; tag is then later on accompanied with a small JavaScript
+that transforms the &lt;code&gt;src&lt;/code&gt; attribute to point to a wider map picture.
+JavaScript is needed to sniff the width of the containing &lt;code&gt;div&lt;/code&gt;
+element by using &lt;code&gt;element.clientWidth&lt;/code&gt;. Oh, and while doing this I
+also discovered that Google Maps API limits the image width to 640
+pixels. Damn.&lt;/p&gt;
+&lt;p&gt;Not only the static image overcame these both problems but it also
+renders a neater marker, with drop shadows and all!&lt;/p&gt;
+&lt;h2&gt;Providing links to the internal navigator application&lt;/h2&gt;
+&lt;p&gt;To ease the finding of a venue site provides a link to an internal map
+application. Or more specific: &lt;em&gt;tries&lt;/em&gt; to provide one. We started with
+linking directly to &lt;a href=&#34;http://maps.google.com/&#34;&gt;Google Maps&lt;/a&gt; with proper
+longitudes and latitudes in the URL. This works &lt;em&gt;mostly&lt;/em&gt; fine: on
+iPhone and on Android it, in &lt;em&gt;almost&lt;/em&gt; every case, opens up the native
+Google Maps application. &lt;em&gt;Almost&lt;/em&gt;.&lt;/p&gt;
+&lt;h3&gt;HTC woes&lt;/h3&gt;
+&lt;p&gt;During last firmware update &lt;a href=&#34;http://htc.com/&#34;&gt;HTC&lt;/a&gt; rolled out a new
+version of their customized Android Browser (which they call
+&#34;Internet&#34;). This updated Internet contains a small, but pretty
+annoying bug: it seems to break URL handling so that the Google Maps
+links are now opened in browser by default and there&#39;s no way to
+change this default. I haven&#39;t explored if it does the same with other
+URLs. My hypothesis is that this could be related to their own
+navigation software, Route 66, which is shipped with newer HTC Android
+devices. It could possibly open by default the Google Maps links in
+this application. However, the app is not available for Desire.
+Apparently I&#39;m not
+&lt;a href=&#34;http://www.google.ru/support/forum/p/Google+Mobile/thread?tid=635945813b796094&amp;amp;hl=en&#34;&gt;alone&lt;/a&gt;
+&lt;a href=&#34;http://www.google.ru/support/forum/p/Google+Mobile/thread?tid=10cad2d45a87a24f&amp;amp;hl=en&#34;&gt;with&lt;/a&gt;
+&lt;a href=&#34;http://www.google.com/support/forum/p/maps/thread?tid=73662f90526a8cca&amp;amp;hl=en&#34;&gt;this&lt;/a&gt;.
+Funny thing is that if I type &lt;code&gt;maps.google.com&lt;/code&gt; in the Google Search
+app (not the website), it asks me politely if I want to open Maps or
+Browser. So HTC has definitely broke something while modifying the
+browser.&lt;/p&gt;
+&lt;p&gt;Needless to say, the link works fine on the Cyanogenmod Desire, as it
+sports nearly vanilla Android browser by Google. The bad thing here
+is that there&#39;s no other way to send a link that suggests the phone to
+open Maps application with correct coordinates.&lt;/p&gt;
+&lt;h3&gt;N8 woes and yays&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&#34;http://www.developer.nokia.com/Resources/Library/Web/nokia-browsers.html&#34;&gt;The Nokia Browser documentation developer.nokia.com&lt;/a&gt;
+does not say a thing about opening Ovi Maps from a website. After some
+excessive googling I found a forum post that mentioned briefly about
+an undocumented &lt;code&gt;services&lt;/code&gt; URI scheme. By calling that URI scheme with
+a properly formatted URL, in this case
+&lt;code&gt;services://C2A?C2Aid=2305&amp;amp;Version=1.0&amp;amp;2305=Landmark(lat=XXX&amp;amp;long=YYY)&lt;/code&gt;,
+it opens up the Ovi Maps application with a marker at the latitude and
+longitude specified. You can even supply a name with additional &lt;code&gt;name&lt;/code&gt;
+parameter given to the &lt;code&gt;Landmark&lt;/code&gt; &#34;constructor&#34;!&lt;/p&gt;
+&lt;h3&gt;...and the issues with Series 60&lt;/h3&gt;
+&lt;p&gt;Even though Nokia E75 has the same generation browser as N8, it does
+not support &lt;code&gt;services&lt;/code&gt; URI scheme, at least not in the same format. I
+also failed to find any documentation or experience about opening Ovi
+Maps application from a link, so the built-in navigation is a no-go
+with E75. With S60, we&#39;re stuck with mobile Google Maps URL and the
+experience is not optimal. You could even craft a URL that gives you
+directions, but that would require knowing your current location and
+E75s browser does not support Geolocation API, so that&#39;s a no-go too.&lt;/p&gt;
+&lt;h2&gt;Conclusion&lt;/h2&gt;
+&lt;p&gt;If it would be satsifying for us to serve only iPhone/iOS and Android
+devices (sans current incarnation of HTC Desire, possibly other HTC
+Android devices too) the mapping would be easy: Either display a
+JavaScript map (pretty usable on those devices) or use static image
+provided by El Goog with a properly formatted link to
+&lt;code&gt;maps.google.com&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;However, if you need to support other OSs, it might require tremendous
+amounts of googling around the interwebs. I don&#39;t even have a clue how
+Bada or WP7 works, but luckily they both are a small minority in the
+browser market. I also couldn&#39;t find anything for Series 40, so the
+Nokia seems to keep consistent line of undocumenting through the
+product line.&lt;/p&gt;
+&lt;p&gt;My suggestion to mobile phone manufacturers would be a single page of
+documentation describing the supported URI schemes of the built-in
+applications to tell the developer what&#39;s possible and what&#39;s not.
+With examples, of course.&lt;/p&gt;
+&lt;p&gt;P.S. At the moment of writing this, we yet haven&#39;t launched the new
+maps and map links in to the wild, but we&#39;re in the process of doing
+so.&lt;/p&gt;
+    </content>
+  </entry>
+  
+  <entry>
+    <title>rxvt-unicode and OS X</title>
+    <link href="http://dywypi.org/2011/04/rxvt-unicode-and-os-x.html" />
+    <id>http://dywypi.org/2011/04/rxvt-unicode-and-os-x.html</id>
+    <updated>2011-04-05 00:00:00</updated>
+    
+    <category term="osx" />
+    
+    <category term="terminal" />
+    
+    <category term="urxvt" />
+    
+    <content type="html">
+      &lt;p&gt;When I started at my current job at &lt;a href=&#34;http://taiste.fi&#34;&gt;Taiste&lt;/a&gt; I
+got 15&#34; Macbook Pro as my primary computer at work. As a long time
+Ubuntu user I was faced with series of problems, mainly due to
+differences in platforms. Package management is a pain I just have to
+live with, &lt;a href=&#34;http://emacsformacosx.com&#34;&gt;Emacs&lt;/a&gt; works almost out of the
+box as it should, but the terminal requires some heavy tweaking.&lt;/p&gt;
+&lt;h2&gt;Available alternatives&lt;/h2&gt;
+&lt;p&gt;OS X has few alternatives available. The system ships with
+&lt;a href=&#34;http://en.wikipedia.org/wiki/Apple_Terminal&#34;&gt;Terminal.app&lt;/a&gt;, which has
+been redone for Snow Leopard (aka 10.6). It&#39;s decent, looks like a
+terminal, but has at least one minor and one major drawback. Minor
+drawback is the lack of proper color support (yes, I &lt;strong&gt;need&lt;/strong&gt; colors
+in terminal). Terminal.app supports only 16 colors. 16, Six-teen. 70s
+called and they want their terminal back.&lt;/p&gt;
+&lt;p&gt;Major drawback is that you simply can&#39;t override cmd key functionality
+in any sane way to make it work as a Meta key in terminal. In
+practice, your forced to use ESC as Meta key, which just does not cut
+it.&lt;/p&gt;
+&lt;p&gt;Another option is &lt;a href=&#34;https://sites.google.com/site/iterm2home/&#34;&gt;iTerm2&lt;/a&gt;.
+Feels like the Swiss army knife of OS X terminals. Has load of
+configuration options, even supports, in latest versions, rebinding
+cmd keys as Meta keys! So after all it looks that even this milky
+white cloud has a silver lining.&lt;/p&gt;
+&lt;p&gt;But unfortunately, the iTerm2 also has a major drawback: If you rebind
+either of cmd keys as Meta, it wont let cmd+Tab (aka the Alt-Tab
+equivalent of OS X) go through to OS X level (Emacs knows how to do
+this, can&#39;t be that hard...). So basically you can&#39;t switch between
+applications with keyboard when using iTerm, unless you bind Option
+key to cmd, which makes option+tab switching possible, which on the
+other hand breaks every single option+key combo (like parenthesis)...&lt;/p&gt;
+&lt;h2&gt;Back to the One That (Mostly) Works&lt;/h2&gt;
+&lt;p&gt;I was a happy user of
+&lt;a href=&#34;http://software.schmorp.de/pkg/rxvt-unicode.html&#34;&gt;rxvt-unicode&lt;/a&gt; on
+Ubuntu, so I started searching if it would cut on OS X too. First
+caveat is that it needs to be run under X11, or
+&lt;a href=&#34;http://xquartz.macosforge.org/&#34;&gt;XQuartz&lt;/a&gt;. I&#39;ve been told that that&#39;s
+the final frontier no true OS X user wants to confront.&lt;/p&gt;
+&lt;p&gt;However, everything went smoother than expected. First thing was to
+install rxvt-unicode. I used
+&lt;a href=&#34;http://mxcl.github.com/homebrew/&#34;&gt;homebrew&lt;/a&gt; for that:&lt;/p&gt;
+&lt;pre&gt;
+  brew install urxvt
+&lt;/pre&gt;
+
+&lt;p&gt;After compiling a while (binary packages, anyone?) rxvt-unicode got
+installed. Butt ugly as usual, but there it was. After configuring
+colors (see
+&lt;a href=&#34;http://sdkmvx.wordpress.com/2008/08/13/rxvt-unicode-terminal-colors/&#34;&gt;here&lt;/a&gt;
+for example) it was time to make it more Mac-compatible.&lt;/p&gt;
+&lt;h3&gt;Copy &amp;amp; Paste&lt;/h3&gt;
+&lt;p&gt;As every true programmer knows, when deadlines hit the tool that Gets
+Job Done is Copy &amp;amp; Paste. So it was essential to get copy &amp;amp; paste
+functionality in urxvt. I use a slightly modified clipboard script on
+urxvt to do the magic. It&#39;s available as a
+&lt;a href=&#34;https://gist.github.com/906248&#34;&gt;gist&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;To get it working, you need to define it (and the shortcuts) in
+&lt;code&gt;.Xdefaults&lt;/code&gt; with few lines:&lt;/p&gt;
+&lt;pre&gt;
+  URxvt.perl-ext-common: macosx-clipboard
+  URxvt*keysym.M-c: perl:macosx-clipboard:copy
+  URxvt*keysym.M-v: perl:macosx-clipboard:paste
+&lt;/pre&gt;
+
+&lt;p&gt;After this, I got traditional copy &amp;amp; paste with cmd-C and cmd-V in
+urxvt!&lt;/p&gt;
+&lt;h3&gt;Opening urls&lt;/h3&gt;
+&lt;p&gt;Bart Trojanowski&#39;s excellent
+&lt;a href=&#34;https://github.com/bartman/urxvt-scripts&#34;&gt;mark-yank-urls&lt;/a&gt; comes to
+help with URLs. For OS X use, I&#39;ve
+&lt;a href=&#34;https://gist.github.com/906263&#34;&gt;modified it a bit&lt;/a&gt;. In addition to
+the script, I use a custom applescript to launch URLs in background in
+Chrome:&lt;/p&gt;
+&lt;div class=&#34;pygments&#34;&gt;&lt;pre&gt;  &lt;span class=&#34;nb&#34;&gt;on&lt;/span&gt; &lt;span class=&#34;nb&#34;&gt;run&lt;/span&gt; &lt;span class=&#34;nv&#34;&gt;argv&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;tell&lt;/span&gt; &lt;span class=&#34;nb&#34;&gt;application&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;quot;Google Chrome&amp;quot;&lt;/span&gt;
+      &lt;span class=&#34;k&#34;&gt;set&lt;/span&gt; &lt;span class=&#34;nv&#34;&gt;taburl&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;to&lt;/span&gt; &lt;span class=&#34;nb&#34;&gt;item&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;of&lt;/span&gt; &lt;span class=&#34;nv&#34;&gt;argv&lt;/span&gt;
+      &lt;span class=&#34;k&#34;&gt;set&lt;/span&gt; &lt;span class=&#34;nv&#34;&gt;myTab&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;to&lt;/span&gt; &lt;span class=&#34;nb&#34;&gt;make&lt;/span&gt; &lt;span class=&#34;nb&#34;&gt;new&lt;/span&gt; &lt;span class=&#34;no&#34;&gt;tab&lt;/span&gt; &lt;span class=&#34;nb&#34;&gt;at&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;end&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;of&lt;/span&gt; &lt;span class=&#34;nv&#34;&gt;tabs&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;of&lt;/span&gt; &lt;span class=&#34;na&#34;&gt;window&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt; &lt;span class=&#34;nv&#34;&gt;with&lt;/span&gt; &lt;span class=&#34;na&#34;&gt;properties&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;URL&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;taburl&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;end&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;tell&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;end&lt;/span&gt; &lt;span class=&#34;nb&#34;&gt;run&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Applescript is launched via bash script (yo dawg!), which just calls
+&lt;code&gt;osascript &amp;lt;path-to-applescript&amp;gt; argument&lt;/code&gt;. Next step is
+just to add this script and keybinding in &lt;code&gt;.Xdefaults&lt;/code&gt;:&lt;/p&gt;
+&lt;pre&gt;
+  URxvt.perl-ext: selection,mark-yank-urls
+  URxvt.keysym.M-u: perl:mark-yank-urls:activate_mark_mode
+&lt;/pre&gt;
+
+&lt;p&gt;After this, Meta-U goes to URL selection mode, C-p/C-n scroll through
+URLs, y yanks (that&#39;s copying, you lesser emacsers) and Return opens
+URLs in background in your Chrome.&lt;/p&gt;
+    </content>
+  </entry>
+  
+  <entry>
+    <title>The impact of document IDs on performance of CouchDB</title>
+    <link href="http://dywypi.org/2010/11/the-impact-of-document-ids-on-performance-of-couchdb.html" />
+    <id>http://dywypi.org/2010/11/the-impact-of-document-ids-on-performance-of-couchdb.html</id>
+    <updated>2010-11-11 00:00:00</updated>
+    
+    <category term="couchdb" />
+    
+    <category term="performance" />
+    
+    <category term="nosql" />
+    
+    <category term="databases" />
+    
+    <content type="html">
+      &lt;p&gt;(This text is copied from &lt;a href=&#34;http://blog.inoi.fi&#34;&gt;blog.inoi.fi&lt;/a&gt; to my
+personal blog, as I no longer work there and think this is a keeper)&lt;/p&gt;
+&lt;p&gt;
+ One major part of our product is a data acquisition framework. The
+ framework is responsible of gathering data on devices and sending it
+ to the server. The server then processes the data and eventually
+ stores it in &lt;a href=&#34;http://couchdb.org/&#34;&gt;CouchDB&lt;/a&gt;.
+&lt;/p&gt;
+
+&lt;p&gt;
+ CouchDB storage is pretty simple. It&#39;s just a single database where
+ the data gets inserted with a random ID. Removals or modifications
+ are hardly done to the data after it has been inserted there, its
+ only function is just to be read later and to be displayed as graphs
+ and such
+&lt;/p&gt;
+
+&lt;h2&gt;Things started to get weird&lt;/h2&gt;
+
+&lt;p&gt;
+ However, the data server started to behave strangely. First symptoms
+ were slow inserts and huge disk usage of the database. For the slow
+ inserts we first suspected the reason was that we were not using
+ &lt;a href=&#34;http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API&#34;&gt;CouchDB&#39;s
+ bulk document API&lt;/a&gt; for inserting the data but after fixing that
+ we only got a minor speed increase. The compaction of the database
+ didn&#39;t really help, as it compacted the database too slow, peak rate
+ being 300 documents per second and the average about 100 doc/s. With
+ 8 million docs that takes a while. Worst thing was that the
+ compaction didn&#39;t even reduce the disk usage. The database ate 26
+ gigabytes of disk containing only 8 million documents. That&#39;s a
+ whopping 3 kilobytes per document, and the documents were really
+ about 100 bytes in size.
+&lt;/p&gt;
+
+&lt;p&gt;
+ What was even weirder we didn&#39;t really see anything strange in the
+ way the server performed. IO ops were low, CPU usage was low and
+ there was a plenty of free memory. Heck, we even could write zeros
+ (&lt;tt&gt;dd if=/dev/zero of=/var/somefile.img&lt;/tt&gt;) on the disk at the
+ rate of 50Mb/s. Even killing most of the other services didn&#39;t help:
+ CouchDB just kept being slow. We even upgraded the CouchDB in our
+ test environment to try if it helped, but we only gained small
+ performance gain from that operation.
+&lt;/p&gt;
+
+&lt;h2&gt;Let&#39;s not be that random&lt;/h2&gt;
+
+&lt;p&gt;
+ As you might have
+ heard, &lt;a href=&#34;http://dilbert.com/strips/comic/2001-10-25/&#34;&gt;the
+ problem with the random is that you never can be sure&lt;/a&gt;. So after
+ a week or so pondering the issue we stumbled upon
+ on &lt;a href=&#34;http://guide.couchdb.org/draft/performance.html#bulk&#34;&gt;a
+ chapter about bulk inserts and monotonic DocIDs&lt;/a&gt; in the
+ excellent &lt;a href=&#34;http://guide.couchdb.org/&#34;&gt;CouchDB guide&lt;/a&gt;.
+ With a tip from the awesome folks
+ at &lt;a href=&#34;irc://irc.freenode.net/couchdb&#34;&gt;#couchdb&lt;/a&gt; we rebuilt
+ our system using sequential IDs instead of purely random IDs.
+&lt;/p&gt;
+
+&lt;p&gt;
+ We copied the idea of sequential IDs straight from CouchDB which
+ uses them for its auto-generated DocIDs. We just needed to implement
+ it in Python and ended up with the following:
+&lt;/p&gt;
+
+&lt;p&gt;&lt;script src=&#34;https://gist.github.com/672279.js&#34;&gt; &lt;/script&gt;&lt;/p&gt;
+&lt;p&gt;
+ The &lt;/p&gt;
+
+&lt;p&gt;&lt;tt&gt;SequentialID&lt;/tt&gt; is a random 32 character hexadecimal
+ string. The first 26 characters is a prefix that stays the same for
+ approx. 8000 subsequent calls. The suffix is increased
+ monotonically. After around 8000 calls the the prefix is regenerated
+ and the suffix is reseted to a small positive value. We also built
+ another one using ISO-formatted UTC-timestamp with few random digits
+ suffixed.
+&lt;p&gt;&lt;/p&gt;&lt;/p&gt;
+&lt;p&gt;
+ Now you might think that we would have collisions with the
+ &lt;/p&gt;
+
+&lt;p&gt;&lt;tt&gt;SequentialID&lt;/tt&gt;, especially if multiple processes are
+ writing to the same CouchDB database. However, we&#39;re not since the
+ prefix is a random generated string and the entropy (i.e. string
+ length) is big enough to make the collision highly unlikely. Plus
+ the SequentialID is never shared between processes it is regenerated
+ for every single one instead.
+&lt;p&gt;&lt;/p&gt;&lt;/p&gt;
+&lt;h2&gt;Performance rocketed through the roof&lt;/h2&gt;
+
+&lt;p&gt;
+ No fix would be good without performance metrics so Petri
+ wrote &lt;a href=&#34;https://gist.github.com/672229&#34;&gt;a small benchmarking
+ script&lt;/a&gt;.
+&lt;/p&gt;
+
+&lt;p&gt;
+ This showed us the huge performance increase we got. The write speed
+ is almost &lt;b&gt;four&lt;/b&gt; times as fast with sequential IDs than with
+ random IDs. Not to mention that the database takes a one
+ seventh of the space on the disk! We didn&#39;t try the compaction
+ speed, but everything indicates that should be a lot faster too.
+&lt;/p&gt;
+
+&lt;h2&gt;How does it work?&lt;/h2&gt;
+
+&lt;p&gt;
+ The reason why this worked is due to the design how CouchDB stores
+ it data on the disk. Internally CouchDB uses
+ &lt;a href=&#34;http://en.wikipedia.org/wiki/B%2B-tree&#34;&gt;B+-tree&lt;/a&gt; (from
+ now on referred as B-tree) to store the data of a single database.
+ Now if the data that is inserted in the B-tree (in this case, the
+ DocIDs) is random, it causes the tree to fan out quickly. As the
+ minimum fill rate is 1/2 for every internal node, the nodes are
+ mostly filled up to the 1/2 (as the data spreads evenly due to its
+ randomness) generating more internal nodes than before.
+&lt;/p&gt;
+
+&lt;p&gt;
+ More the internal nodes the more disk seeks the CouchDB has to
+ perform to write the correct leaf to write the data in to. This is
+ why we didn&#39;t see any IO ops stacking up: &lt;em&gt;the disk seeks do not
+   show up in the iostat&lt;/em&gt;! And this was the single biggest cause
+ to slow down both reads and especially writes of our CouchDB
+ database.
+&lt;/p&gt;
+
+&lt;p&gt;
+ The problem aren&#39;t even limited to the disk seeking. The randomness
+ of the DocIDs causes the tree structure to be changed often (due to
+ the nature of B-trees). When using append only log the database has
+ no other way to do than rewrite the whole new structure of the tree
+ to the end of the append only log. As this gets more common and
+ common as more random data gets poured in, the disk usage grows
+ rapidly, eventually hogging a lot more disk than the data in the
+ database is actually requiring. Not only this, this &lt;em&gt;slow down
+ compaction&lt;/em&gt; too, as the compaction needs to constantly rebuild
+ the new database.
+&lt;/p&gt;
+
+&lt;p&gt;
+ The B-tree is why using the (semi-)sequential IDs is a real life
+ saver. The new model causes the database to be filled in orderly
+ fashion and the buckets (i.e. leafs) are filled in instead of
+ leaving them half full. Best part here is that the auto generated
+ IDs by CouchDB (which were not an option for us) already use the
+ sequential ID scheme, so using those IDs you don&#39;t really need to
+ worry a thing.
+&lt;/p&gt;
+
+&lt;p&gt;
+ So remember kids: if you cram loads of data in your CouchDB, remember to select your document ID scheme carefully!
+&lt;/p&gt;
+    </content>
+  </entry>
+  
+</feed>

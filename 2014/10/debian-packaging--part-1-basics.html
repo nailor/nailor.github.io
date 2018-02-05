@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<head>
+  <!--[if lt IE 9]>
+  <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+  <meta charset='utf-8' />
+  <meta content='width=320,initial-scale=1' name='viewport' />
+  <title>Debian Packaging - Part 1: Basics &mdash; dywypi.org</title>
+  <meta content='Jyrki Pulliainen' name='author' />
+  
+
+<link rel="alternate" href="http://feeds.feedburner.com/dywypiorg-blog" type="application/atom+xml" title="dywypi.org" />
+
+  <link href='/css/base.css' rel='stylesheet' />
+  <link href='http://fonts.googleapis.com/css?family=Cabin:400,700' link='link' rel='stylesheet' type='text/css' />
+  
+
+<link rel="stylesheet" href="/css/pygments.css">
+
+</head>
+<body>
+  <header class='cf'>
+    <h1>
+      <a href='/'>dywypi.org</a>
+    </h1>
+  </header>
+  <section class='cf' id='main'>
+    
+  
+<article class="blogentry">
+  
+  <h1>
+    <a href="/2014/10/debian-packaging--part-1-basics.html">Debian Packaging - Part 1: Basics</a>
+  </h1>
+
+  <div class="head info">
+    by <a href="/about/">Jyrki Pulliainen</a> on 2014-10-22
+  </div>
+
+  <div class="cf content">
+    <p>Packaging systems are complicated. And opionated. However, this blog
+post is not to tell what is the best packaging system available. They
+all excel and suck in different ways.</p>
+<p>This series of blog posts is trying the shed some light into the
+Debian packaging. This is the first part where we will dive into the
+basics of the Debian packages. The series is not looking into
+particular ways of installing the packages (tools like <code>apt-get</code> or
+<code>aptitude</code>).</p>
+<p>This series also looks these things from the Debian perspective. While
+derivatives, like Ubuntu, differ a bit, most of this guide still
+holds.</p>
+<h2>A Debian Package</h2>
+<p>Debian package itself is a fairly simple thing. The package has a
+filename, which is in format <code>&lt;name&gt;_&lt;version&gt;_&lt;architecture&gt;.deb</code>.
+Name is pretty self-explaining, version and architecture parts are a
+bit more interesting.</p>
+<h3>Filename</h3>
+<p>Let's pick a sample package. If you have an access to a Debian box,
+you can find a pile of packages in the apt-tool's cache under
+<code>/var/cache/apt/archives</code>. Anyway, here is our brave example-package:
+<code>xfonts-100dpi_1%3a1.0.3_all.deb</code>.</p>
+<p>So, as stated before, the name is a simple thing. In this case the
+name is "xfonts-100dpi". Version is <code>1%3a1.0.3</code>. The <code>%3a</code> is an
+escaped colon, so the version actually is <code>1:1.0.3</code>.</p>
+<p>The version has a lot in it, so let's split it a bit. <code>1</code>, before the
+colon, is an "epoch". It is kind of a safety valve for upstream
+mishaps. If the upstream version, <code>1.0.3</code> in this case, gets transformed
+to something that no longer lexicographically orders correctly, the
+epoch can be used to overwrite that. An example could be a package
+first versioned with date (<code>20141022</code>) and then later changed to more
+traditional semantic versioning (<code>1.0</code>). In this case the <code>1.0</code> would
+be deemed an earlier release. Epoch allows Debian package maintainer
+to keep the sorting of the versions correct while still using the new
+upstream version. Of course this is a handy way to fix the mishaps of
+the maintainer.</p>
+<p>After the upstream version follows Debian packaging version. This is
+the iteration of the Debian packaging for <em>this</em> upstream version. It
+is customary to reset it back to 1 if a new upstream version is
+released. Not all packages have the Debian packaging version. In that
+case they are packages maintained in the Debian, not based on anything
+upstream outside the Debian project.</p>
+<p>If you are interested in the versioning or sorting of versions, the
+<a href="https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Version">Debian Policy Manual</a>
+contains a pretty good explanation about that.</p>
+<h3>File format</h3>
+<p>Like the file name, the format is not too complicated either. Debian
+packages are standard <code>ar</code> archives. The archive includes two <code>tar</code>
+archives, which can be compressed. One of these archives contains the
+software, the other one contains the metadata of the package. Third
+file in the package is a version number of the <code>deb</code> file. It contains
+2.0 for current versions. Using our example package, this is what it
+(and any other package) contains:</p>
+<pre><code>$ ar -tf xfonts-100dpi_1%3a1.0.3_all.deb
+debian-binary
+control.tar.gz
+data.tar.gz
+</code></pre>
+<h3>Package Metadata</h3>
+<p>If we unpack the package and look into the control file, we see a
+bunch of files:</p>
+<pre><code>$ tar tf control.tar.gz
+./
+./postinst
+./postrm
+./conffiles
+./control
+./md5sums
+</code></pre>
+<p>We'll dive into these files a bit deeper in the upcoming parts, but a
+short primer is in place. <code>control</code> contains the metadata of the
+software, like dependencies, maintainer and version among others.</p>
+<p>The <code>md5sums</code> contains, as name suggests, the MD5 checksums of the
+files in the package. The <code>conffiles</code> contains listing of all the
+configuration files this package has.</p>
+<p>More interesting parts are the <code>postinst</code> and <code>postrm</code> files. There
+are two additional files not present in our test package, <code>prerm</code> and
+<code>preinst</code>. As names suggest, these files are ran before the removal
+(prerm) and installation (preinst) as well as after the removal
+(postrm) and installation (postrm). The files are just ordinary shell
+scripts called with certain set of parameters, depending on the
+situation. The
+<a href="https://wiki.debian.org/MaintainerScripts">Debian wiki</a> has informal
+flowcharts of what happens in the installation.</p>
+<p>All these files of the existing, installed, packages are also
+available under <code>/var/lib/dpkg/info</code>. This is especially useful if an
+installation ends up in a some sort of limbo due to for example a
+buggy postinst file. In that case the file can just be modified in
+place under the <code>info</code> folder and the installation continued.</p>
+<h2>Creating packages</h2>
+<p>So there you go: a quick primer to the Debian packages. In the next
+part we will look into creating Debian packages.</p>
+
+    
+    <div class="tail info">
+      <p>If you want to comment this blog post, just send mail
+        to <span class="ma b">my firstname + blog @ thisdomain.tld</span>.
+        If the question is a proper one, it might get answered. Good ones
+        might even end up on the site.</p>
+
+      <p>Tags:
+        
+        <a href="/tags/debian/">debian</a>
+        
+        <a href="/tags/linux/">linux</a>
+        
+        <a href="/tags/sysadmin/">sysadmin</a>
+        
+        <a href="/tags/packaging/">packaging</a>
+        </p>
+    </div>
+    
+  </div>
+
+
+</article>
+
+
+  </section>
+  <script src='http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js'></script>
+  <script type='text/javascript'>
+    //<![CDATA[
+      !window.jQuery && document.write(
+        '<script src="/js/jquery-1.5.2.min.js"><\/script>');
+    //]]>
+  </script>
+  <script src='/js/modernizr-1.7.min.js'></script>
+  <script language='javascript' src='/js/mailaddr.js'></script>
+  <footer>
+    <p>
+      Copyright 2011 by Jyrki Pulliainen
+    </p>
+    <p>
+      The content is licensed under a <a rel="license"
+      href="http://creativecommons.org/licenses/by/3.0/">Creative
+      Commons Attribution 3.0 Unported License</a>.
+    </p>
+  </footer>
+
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-22601090-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+</body>
