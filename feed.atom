@@ -4,122 +4,13 @@
   <title>dywypi.org blog</title>
   
   <link href="http://dywypi.org/" />
-  <updated>2014-10-22T00:00:00Z</updated>
+  <updated>2012-02-11T00:00:00Z</updated>
   <author>
     <name>Jyrki Pulliainen</name>
     <uri>http://dywypi.org/</uri>
   </author>
   <id>http://dywypi.org/feed.atom</id>
 
-  
-  <entry>
-    <title>Debian Packaging - Part 1: Basics</title>
-    <link href="http://dywypi.org/2014/10/debian-packaging--part-1-basics.html" />
-    <id>http://dywypi.org/2014/10/debian-packaging--part-1-basics.html</id>
-    <updated>2014-10-22 00:00:00</updated>
-    
-    <category term="debian" />
-    
-    <category term="linux" />
-    
-    <category term="sysadmin" />
-    
-    <category term="packaging" />
-    
-    <content type="html">
-      &lt;p&gt;Packaging systems are complicated. And opionated. However, this blog
-post is not to tell what is the best packaging system available. They
-all excel and suck in different ways.&lt;/p&gt;
-&lt;p&gt;This series of blog posts is trying the shed some light into the
-Debian packaging. This is the first part where we will dive into the
-basics of the Debian packages. The series is not looking into
-particular ways of installing the packages (tools like &lt;code&gt;apt-get&lt;/code&gt; or
-&lt;code&gt;aptitude&lt;/code&gt;).&lt;/p&gt;
-&lt;p&gt;This series also looks these things from the Debian perspective. While
-derivatives, like Ubuntu, differ a bit, most of this guide still
-holds.&lt;/p&gt;
-&lt;h2&gt;A Debian Package&lt;/h2&gt;
-&lt;p&gt;Debian package itself is a fairly simple thing. The package has a
-filename, which is in format &lt;code&gt;&amp;lt;name&amp;gt;_&amp;lt;version&amp;gt;_&amp;lt;architecture&amp;gt;.deb&lt;/code&gt;.
-Name is pretty self-explaining, version and architecture parts are a
-bit more interesting.&lt;/p&gt;
-&lt;h3&gt;Filename&lt;/h3&gt;
-&lt;p&gt;Let&#39;s pick a sample package. If you have an access to a Debian box,
-you can find a pile of packages in the apt-tool&#39;s cache under
-&lt;code&gt;/var/cache/apt/archives&lt;/code&gt;. Anyway, here is our brave example-package:
-&lt;code&gt;xfonts-100dpi_1%3a1.0.3_all.deb&lt;/code&gt;.&lt;/p&gt;
-&lt;p&gt;So, as stated before, the name is a simple thing. In this case the
-name is &#34;xfonts-100dpi&#34;. Version is &lt;code&gt;1%3a1.0.3&lt;/code&gt;. The &lt;code&gt;%3a&lt;/code&gt; is an
-escaped colon, so the version actually is &lt;code&gt;1:1.0.3&lt;/code&gt;.&lt;/p&gt;
-&lt;p&gt;The version has a lot in it, so let&#39;s split it a bit. &lt;code&gt;1&lt;/code&gt;, before the
-colon, is an &#34;epoch&#34;. It is kind of a safety valve for upstream
-mishaps. If the upstream version, &lt;code&gt;1.0.3&lt;/code&gt; in this case, gets transformed
-to something that no longer lexicographically orders correctly, the
-epoch can be used to overwrite that. An example could be a package
-first versioned with date (&lt;code&gt;20141022&lt;/code&gt;) and then later changed to more
-traditional semantic versioning (&lt;code&gt;1.0&lt;/code&gt;). In this case the &lt;code&gt;1.0&lt;/code&gt; would
-be deemed an earlier release. Epoch allows Debian package maintainer
-to keep the sorting of the versions correct while still using the new
-upstream version. Of course this is a handy way to fix the mishaps of
-the maintainer.&lt;/p&gt;
-&lt;p&gt;After the upstream version follows Debian packaging version. This is
-the iteration of the Debian packaging for &lt;em&gt;this&lt;/em&gt; upstream version. It
-is customary to reset it back to 1 if a new upstream version is
-released. Not all packages have the Debian packaging version. In that
-case they are packages maintained in the Debian, not based on anything
-upstream outside the Debian project.&lt;/p&gt;
-&lt;p&gt;If you are interested in the versioning or sorting of versions, the
-&lt;a href=&#34;https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Version&#34;&gt;Debian Policy Manual&lt;/a&gt;
-contains a pretty good explanation about that.&lt;/p&gt;
-&lt;h3&gt;File format&lt;/h3&gt;
-&lt;p&gt;Like the file name, the format is not too complicated either. Debian
-packages are standard &lt;code&gt;ar&lt;/code&gt; archives. The archive includes two &lt;code&gt;tar&lt;/code&gt;
-archives, which can be compressed. One of these archives contains the
-software, the other one contains the metadata of the package. Third
-file in the package is a version number of the &lt;code&gt;deb&lt;/code&gt; file. It contains
-2.0 for current versions. Using our example package, this is what it
-(and any other package) contains:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;$ ar -tf xfonts-100dpi_1%3a1.0.3_all.deb
-debian-binary
-control.tar.gz
-data.tar.gz
-&lt;/code&gt;&lt;/pre&gt;
-&lt;h3&gt;Package Metadata&lt;/h3&gt;
-&lt;p&gt;If we unpack the package and look into the control file, we see a
-bunch of files:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;$ tar tf control.tar.gz
-./
-./postinst
-./postrm
-./conffiles
-./control
-./md5sums
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;We&#39;ll dive into these files a bit deeper in the upcoming parts, but a
-short primer is in place. &lt;code&gt;control&lt;/code&gt; contains the metadata of the
-software, like dependencies, maintainer and version among others.&lt;/p&gt;
-&lt;p&gt;The &lt;code&gt;md5sums&lt;/code&gt; contains, as name suggests, the MD5 checksums of the
-files in the package. The &lt;code&gt;conffiles&lt;/code&gt; contains listing of all the
-configuration files this package has.&lt;/p&gt;
-&lt;p&gt;More interesting parts are the &lt;code&gt;postinst&lt;/code&gt; and &lt;code&gt;postrm&lt;/code&gt; files. There
-are two additional files not present in our test package, &lt;code&gt;prerm&lt;/code&gt; and
-&lt;code&gt;preinst&lt;/code&gt;. As names suggest, these files are ran before the removal
-(prerm) and installation (preinst) as well as after the removal
-(postrm) and installation (postrm). The files are just ordinary shell
-scripts called with certain set of parameters, depending on the
-situation. The
-&lt;a href=&#34;https://wiki.debian.org/MaintainerScripts&#34;&gt;Debian wiki&lt;/a&gt; has informal
-flowcharts of what happens in the installation.&lt;/p&gt;
-&lt;p&gt;All these files of the existing, installed, packages are also
-available under &lt;code&gt;/var/lib/dpkg/info&lt;/code&gt;. This is especially useful if an
-installation ends up in a some sort of limbo due to for example a
-buggy postinst file. In that case the file can just be modified in
-place under the &lt;code&gt;info&lt;/code&gt; folder and the installation continued.&lt;/p&gt;
-&lt;h2&gt;Creating packages&lt;/h2&gt;
-&lt;p&gt;So there you go: a quick primer to the Debian packages. In the next
-part we will look into creating Debian packages.&lt;/p&gt;
-    </content>
-  </entry>
   
   <entry>
     <title>Back on Linux</title>
